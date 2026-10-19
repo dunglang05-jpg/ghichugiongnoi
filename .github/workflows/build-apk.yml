@@ -17,34 +17,27 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Capacitor CLI
-        run: npm install -g @capacitor/cli
-
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Create android project if missing
+      - name: Initialize Capacitor project
         run: |
-          if [ ! -d "android" ]; then
-            npx cap add android || true
+          if [ ! -f package.json ]; then
+            echo '{"name":"voice-notes-ai","version":"1.0.0","private":true}' > package.json
           fi
-
-      - name: Copy web assets
-        run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          if [ ! -f capacitor.config.json ]; then
+            echo '{"appId":"com.voicenotes.ai","appName":"Voice Notes AI","webDir":"www"}' > capacitor.config.json
+          fi
           mkdir -p www
-          cp -r static/* www/ || true
-          npx cap copy android || true
+          cp -r static/* www/ 2>/dev/null || true
+          npx cap add android
 
       - name: Build Debug APK
         working-directory: android
         run: |
-          if [ -f "./gradlew" ]; then
-            chmod +x ./gradlew
-            ./gradlew assembleDebug
-          else
-            echo "No gradlew"
-            exit 1
-          fi
+          chmod +x ./gradlew
+          ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
