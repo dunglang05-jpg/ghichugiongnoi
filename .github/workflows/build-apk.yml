@@ -1,13 +1,9 @@
 name: Build Android APK
 
 on:
-  workflow_dispatch:  # Cho phép chạy thủ công từ tab Actions
+  workflow_dispatch:
   push:
     branches: [ main ]
-    paths:
-      - 'android/**'
-      - 'www/**'
-      - '.github/workflows/build-apk.yml'
 
 jobs:
   build:
@@ -16,25 +12,43 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          node-version: '20'
+
+      - name: Install Capacitor CLI
+        run: npm install -g @capacitor/cli
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x android/gradlew
+      - name: Create android project if missing
+        run: |
+          if [ ! -d "android" ]; then
+            npx cap add android || true
+          fi
+
+      - name: Copy web assets
+        run: |
+          mkdir -p www
+          cp -r static/* www/ || true
+          npx cap copy android || true
 
       - name: Build Debug APK
         working-directory: android
-        run: ./gradlew assembleDebug
+        run: |
+          if [ -f "./gradlew" ]; then
+            chmod +x ./gradlew
+            ./gradlew assembleDebug
+          else
+            echo "No gradlew"
+            exit 1
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: VoiceNotesAI-debug.apk
+          name: VoiceNotesAI.apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 7
+          retention-days: 14
