@@ -37,6 +37,21 @@ jobs:
           cp -r static/* www/ || true
           npx cap add android
 
+      - name: Fix Kotlin dependency conflict
+        run: |
+          cat >> android/build.gradle << 'EOF'
+
+allprojects {
+    configurations.all {
+        resolutionStrategy {
+            force 'org.jetbrains.kotlin:kotlin-stdlib:1.9.22'
+            force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.22'
+            force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.22'
+        }
+    }
+}
+EOF
+
       - name: Build APK
         working-directory: android
         run: |
