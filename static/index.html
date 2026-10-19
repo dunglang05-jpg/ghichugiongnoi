@@ -1,1 +1,78 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Notes AI + Biên nhận</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .mode-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .mode-tab { padding: 8px 16px; border-radius: 8px; background: #2d3142; border: none; color: #e8eaed; cursor: pointer; }
+    .mode-tab.active { background: #6366f1; }
+    .result-box { background: #1a1d27; border: 1px solid #2d3142; border-radius: 12px; padding: 16px; margin-top: 16px; }
+    .result-item { margin: 6px 0; }
+    .result-label { color: #9aa0a6; font-size: 0.85rem; }
+    .export-btn { margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>🎤 Voice Notes AI</h1>
+      <p class="subtitle">Ghi chú + Trích xuất biên nhận tự động</p>
+      <button id="settingsBtn" class="icon-btn">⚙️</button>
+    </header>
+
+    <div id="settingsPanel" class="settings-panel hidden">
+      <h3>Cài đặt</h3>
+      <label>xAI API Key</label>
+      <input type="password" id="apiKey" placeholder="sk-...">
+      <button id="saveSettings" class="btn primary">Lưu API Key</button>
+
+      <label style="display:block;margin-top:16px;">Google Apps Script Webhook URL</label>
+      <input type="text" id="sheetWebhook" placeholder="https://script.google.com/macros/s/.../exec" style="width:100%;margin:8px 0;">
+      <button id="saveWebhook" class="btn secondary">Lưu Webhook</button>
+      <small style="color:#9aa0a6;display:block;margin-top:4px;">Dán URL Web app sau khi Deploy Apps Script</small>
+    </div>
+
+    <div class="mode-tabs">
+      <button class="mode-tab active" data-mode="notes">📝 Ghi chú</button>
+      <button class="mode-tab" data-mode="receipt">🧾 Biên nhận</button>
+    </div>
+
+    <main>
+      <section id="notesMode" class="composer">
+        <textarea id="noteInput" placeholder="Nhập ghi chú hoặc dùng giọng nói / ảnh..." rows="3"></textarea>
+        <div class="composer-actions">
+          <button id="recordBtn" class="btn record">🎙️ Ghi âm</button>
+          <label class="btn image-btn">🖼️ Ảnh<input type="file" id="imageInput" accept="image/*" hidden></label>
+          <button id="saveBtn" class="btn primary">Lưu</button>
+        </div>
+        <div id="recordingIndicator" class="recording-indicator hidden">Đang ghi âm...</div>
+        <div id="processing" class="processing hidden">Đang xử lý...</div>
+      </section>
+
+      <section id="receiptMode" class="composer hidden">
+        <p style="margin-bottom:12px; color:#9aa0a6;">Chụp hoặc tải ảnh biên nhận để AI trích xuất mã ô vuông, hạn sử dụng và nhà cung cấp.</p>
+        <label class="btn primary" style="display:inline-block; margin-bottom:12px;">
+          📸 Tải ảnh biên nhận
+          <input type="file" id="receiptImage" accept="image/*" hidden>
+        </label>
+        <div id="receiptProcessing" class="processing hidden">Đang phân tích biên nhận bằng AI...</div>
+        <div id="receiptResult" class="result-box hidden"></div>
+        <button id="exportCsv" class="btn secondary export-btn hidden">⬇️ Tải CSV (để nhập Google Sheet)</button>
+      </section>
+
+      <section class="notes-section">
+        <h2>Ghi chú / Kết quả</h2>
+        <div id="notesList" class="notes-list"></div>
+        <p id="emptyState" class="empty-state">Chưa có dữ liệu.</p>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
