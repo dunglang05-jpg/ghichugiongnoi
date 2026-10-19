@@ -3,76 +3,197 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Voice Notes AI + Biên nhận</title>
-  <link rel="stylesheet" href="/static/styles.css">
+  <title>Voice Notes AI</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    .mode-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-    .mode-tab { padding: 8px 16px; border-radius: 8px; background: #2d3142; border: none; color: #e8eaed; cursor: pointer; }
-    .mode-tab.active { background: #6366f1; }
-    .result-box { background: #1a1d27; border: 1px solid #2d3142; border-radius: 12px; padding: 16px; margin-top: 16px; }
-    .result-item { margin: 6px 0; }
-    .result-label { color: #9aa0a6; font-size: 0.85rem; }
-    .export-btn { margin-top: 12px; }
+    :root { --bg:#0f1117; --card:#1a1d27; --border:#2d3142; --text:#e8eaed; --muted:#9aa0a6; --primary:#6366f1; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:Inter,system-ui,sans-serif; background:var(--bg); color:var(--text); padding:16px; padding-bottom:40px; }
+    .app { max-width:480px; margin:0 auto; }
+    header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+    h1 { font-size:1.4rem; background:linear-gradient(90deg,#6366f1,#a855f7); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .icon-btn { background:var(--card); border:1px solid var(--border); color:var(--text); width:40px; height:40px; border-radius:50%; cursor:pointer; }
+    .settings-panel { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px; }
+    .settings-panel.hidden { display:none; }
+    .settings-panel input { width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); margin:6px 0 12px; }
+    .mode-tabs { display:flex; gap:8px; margin-bottom:16px; }
+    .mode-tab { flex:1; padding:10px; border-radius:10px; background:var(--card); border:1px solid var(--border); color:var(--text); cursor:pointer; }
+    .mode-tab.active { background:var(--primary); border-color:var(--primary); }
+    .composer { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px; }
+    .composer.hidden { display:none; }
+    textarea { width:100%; background:transparent; border:1px solid var(--border); border-radius:8px; color:var(--text); padding:10px; resize:vertical; min-height:80px; margin-bottom:12px; }
+    .btn { padding:10px 14px; border-radius:8px; border:none; cursor:pointer; font-weight:600; }
+    .btn.primary { background:var(--primary); color:white; }
+    .btn.secondary { background:var(--border); color:var(--text); }
+    .result-box { background:#111; border:1px solid var(--border); border-radius:10px; padding:12px; margin-top:12px; }
+    .result-box.hidden { display:none; }
+    .note-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:8px; font-size:0.9rem; }
+    .empty-state { text-align:center; color:var(--muted); padding:30px; }
+    .empty-state.hidden { display:none; }
   </style>
 </head>
 <body>
   <div class="app">
     <header>
       <h1>🎤 Voice Notes AI</h1>
-      <p class="subtitle">Ghi chú + Trích xuất biên nhận tự động</p>
       <button id="settingsBtn" class="icon-btn">⚙️</button>
     </header>
-
     <div id="settingsPanel" class="settings-panel hidden">
-      <h3>Cài đặt</h3>
-      <label>xAI API Key</label>
+      <label>xAI API Key (tùy chọn)</label>
       <input type="password" id="apiKey" placeholder="sk-...">
-      <button id="saveSettings" class="btn primary">Lưu API Key</button>
-
-      <label style="display:block;margin-top:16px;">Google Apps Script Webhook URL</label>
-      <input type="text" id="sheetWebhook" placeholder="https://script.google.com/macros/s/.../exec" style="width:100%;margin:8px 0;">
-      <button id="saveWebhook" class="btn secondary">Lưu Webhook</button>
-      <small style="color:#9aa0a6;display:block;margin-top:4px;">Dán URL Web app sau khi Deploy Apps Script</small>
+      <label>Google Sheet Webhook URL (tùy chọn)</label>
+      <input type="text" id="sheetWebhook" placeholder="https://script.google.com/macros/s/.../exec">
+      <button id="saveSettings" class="btn primary">Lưu cài đặt</button>
     </div>
-
     <div class="mode-tabs">
       <button class="mode-tab active" data-mode="notes">📝 Ghi chú</button>
       <button class="mode-tab" data-mode="receipt">🧾 Biên nhận</button>
     </div>
-
-    <main>
-      <section id="notesMode" class="composer">
-        <textarea id="noteInput" placeholder="Nhập ghi chú hoặc dùng giọng nói / ảnh..." rows="3"></textarea>
-        <div class="composer-actions">
-          <button id="recordBtn" class="btn record">🎙️ Ghi âm</button>
-          <label class="btn image-btn">🖼️ Ảnh<input type="file" id="imageInput" accept="image/*" hidden></label>
-          <button id="saveBtn" class="btn primary">Lưu</button>
-        </div>
-        <div id="recordingIndicator" class="recording-indicator hidden">Đang ghi âm...</div>
-        <div id="processing" class="processing hidden">Đang xử lý...</div>
-      </section>
-
-      <section id="receiptMode" class="composer hidden">
-        <p style="margin-bottom:12px; color:#9aa0a6;">Chụp hoặc tải ảnh biên nhận để AI trích xuất mã ô vuông, hạn sử dụng và nhà cung cấp.</p>
-        <label class="btn primary" style="display:inline-block; margin-bottom:12px;">
-          📸 Tải ảnh biên nhận
-          <input type="file" id="receiptImage" accept="image/*" hidden>
-        </label>
-        <div id="receiptProcessing" class="processing hidden">Đang phân tích biên nhận bằng AI...</div>
-        <div id="receiptResult" class="result-box hidden"></div>
-        <button id="exportCsv" class="btn secondary export-btn hidden">⬇️ Tải CSV (để nhập Google Sheet)</button>
-      </section>
-
-      <section class="notes-section">
-        <h2>Ghi chú / Kết quả</h2>
-        <div id="notesList" class="notes-list"></div>
-        <p id="emptyState" class="empty-state">Chưa có dữ liệu.</p>
-      </section>
-    </main>
+    <section id="notesMode" class="composer">
+      <textarea id="noteInput" placeholder="Nhập ghi chú hoặc dùng giọng nói..."></textarea>
+      <button id="recordBtn" class="btn primary">🎙️ Ghi âm</button>
+      <button id="saveBtn" class="btn secondary">Lưu</button>
+      <div id="recordingIndicator" class="hidden" style="margin-top:8px;color:#ef4444;">Đang ghi âm...</div>
+    </section>
+    <section id="receiptMode" class="composer hidden">
+      <p style="color:#9aa0a6;margin-bottom:12px;">Tải ảnh biên nhận để AI trích xuất thông tin.</p>
+      <label class="btn primary">📸 Chọn ảnh biên nhận
+        <input type="file" id="receiptImage" accept="image/*" hidden>
+      </label>
+      <div id="receiptProcessing" class="hidden" style="margin-top:10px;">Đang phân tích...</div>
+      <div id="receiptResult" class="result-box hidden"></div>
+    </section>
+    <section>
+      <h2 style="margin-bottom:10px;">Ghi chú gần đây</h2>
+      <div id="notesList"></div>
+      <p id="emptyState" class="empty-state">Chưa có ghi chú.</p>
+    </section>
   </div>
-
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="/static/app.js"></script>
+  <script>
+    const STORAGE_KEY = "vn_notes";
+    const API_KEY = "vn_api_key";
+    const WEBHOOK = "vn_webhook";
+    let notes = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    let apiKey = localStorage.getItem(API_KEY) || "";
+    let webhook = localStorage.getItem(WEBHOOK) || "";
+    let recognition = null;
+    let isRecording = false;
+    document.getElementById("settingsBtn").onclick = () => document.getElementById("settingsPanel").classList.toggle("hidden");
+    document.getElementById("saveSettings").onclick = () => {
+      apiKey = document.getElementById("apiKey").value.trim();
+      webhook = document.getElementById("sheetWebhook").value.trim();
+      localStorage.setItem(API_KEY, apiKey);
+      localStorage.setItem(WEBHOOK, webhook);
+      alert("Đã lưu");
+      document.getElementById("settingsPanel").classList.add("hidden");
+    };
+    document.getElementById("apiKey").value = apiKey;
+    document.getElementById("sheetWebhook").value = webhook;
+    document.querySelectorAll(".mode-tab").forEach(t => t.onclick = () => {
+      document.querySelectorAll(".mode-tab").forEach(x => x.classList.remove("active"));
+      t.classList.add("active");
+      const m = t.dataset.mode;
+      document.getElementById("notesMode").classList.toggle("hidden", m !== "notes");
+      document.getElementById("receiptMode").classList.toggle("hidden", m !== "receipt");
+    });
+    function render() {
+      const list = document.getElementById("notesList");
+      const empty = document.getElementById("emptyState");
+      list.innerHTML = "";
+      if (!notes.length) { empty.classList.remove("hidden"); return; }
+      empty.classList.add("hidden");
+      [...notes].reverse().forEach(n => {
+        const d = document.createElement("div");
+        d.className = "note-card";
+        d.innerHTML = `<small style="color:#9aa0a6">${new Date(n.t).toLocaleString("vi-VN")} • ${n.type}</small><div style="margin-top:4px">${n.content.replace(/\n/g,"<br>")}</div>`;
+        list.appendChild(d);
+      });
+    }
+    render();
+    document.getElementById("saveBtn").onclick = () => {
+      const c = document.getElementById("noteInput").value.trim();
+      if (!c) return;
+      notes.push({ content: c, type: "text", t: Date.now() });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+      document.getElementById("noteInput").value = "";
+      render();
+    };
+    if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SR();
+      recognition.lang = "vi-VN";
+      recognition.continuous = false;
+      recognition.onresult = e => { document.getElementById("noteInput").value += e.results[0][0].transcript + " "; };
+      recognition.onend = () => {
+        isRecording = false;
+        document.getElementById("recordingIndicator").classList.add("hidden");
+        document.getElementById("recordBtn").textContent = "🎙️ Ghi âm";
+      };
+    }
+    document.getElementById("recordBtn").onclick = () => {
+      if (!recognition) return alert("Trình duyệt không hỗ trợ nhận dạng giọng nói");
+      if (isRecording) { recognition.stop(); return; }
+      isRecording = true;
+      document.getElementById("recordingIndicator").classList.remove("hidden");
+      document.getElementById("recordBtn").textContent = "⏹️ Dừng";
+      recognition.start();
+    };
+    document.getElementById("receiptImage").onchange = async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const proc = document.getElementById("receiptProcessing");
+      const resBox = document.getElementById("receiptResult");
+      proc.classList.remove("hidden");
+      resBox.classList.add("hidden");
+      try {
+        let text = "";
+        if (apiKey) {
+          const b64 = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result.split(",")[1]); fr.readAsDataURL(file); });
+          const resp = await fetch("https://api.x.ai/v1/responses", {
+            method: "POST",
+            headers: { "Authorization": "Bearer " + apiKey, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "grok-4.7",
+              input: [{ role: "user", content: [
+                { type: "input_image", image_url: "data:image/jpeg;base64," + b64, detail: "high" },
+                { type: "input_text", text: "Trích xuất từ biên nhận Việt Nam. Trả về JSON: {ma_trong_o, han_su_dung, nha_cung_cap, khach_hang, ma_phieu}. Chỉ JSON." }
+              ]}]
+            })
+          });
+          const j = await resp.json();
+          text = j.output?.[0]?.content?.find(c => c.type === "output_text")?.text || JSON.stringify(j);
+        } else {
+          const r = await Tesseract.recognize(file, "vie+eng");
+          text = r.data.text || "Không đọc được";
+        }
+        resBox.innerHTML = "<pre style='white-space:pre-wrap;font-size:0.85rem'>" + text + "</pre>";
+        if (webhook) {
+          const btn = document.createElement("button");
+          btn.className = "btn primary";
+          btn.style.marginTop = "8px";
+          btn.textContent = "📤 Ghi vào Sheet";
+          btn.onclick = async () => {
+            try {
+              let data = {};
+              try { data = JSON.parse(text.match(/\{[\s\S]*\}/)?.[0] || "{}"); } catch {}
+              await fetch(webhook, { method: "POST", headers: {"Content-Type":"text/plain"}, body: JSON.stringify(data) });
+              btn.textContent = "✅ Đã gửi";
+            } catch { btn.textContent = "❌ Lỗi"; }
+          };
+          resBox.appendChild(btn);
+        }
+        resBox.classList.remove("hidden");
+        notes.push({ content: "🧾 " + text.slice(0, 300), type: "receipt", t: Date.now() });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+        render();
+      } catch (err) {
+        alert("Lỗi: " + err.message);
+      } finally {
+        proc.classList.add("hidden");
+        e.target.value = "";
+      }
+    };
+  </script>
 </body>
 </html>
