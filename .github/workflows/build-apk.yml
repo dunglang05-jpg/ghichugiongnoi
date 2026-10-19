@@ -12,41 +12,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '20'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-34 build-tools;34.0.0'
 
-      - name: Initialize Capacitor project
+      - name: Initialize Capacitor
         run: |
-          set -e
-          echo "=== Creating package.json ==="
           echo '{"name":"voice-notes-ai","version":"1.0.0","private":true}' > package.json
-          echo "=== Installing Capacitor ==="
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          echo "=== Creating config ==="
           echo '{"appId":"com.voicenotes.ai","appName":"Voice Notes AI","webDir":"www"}' > capacitor.config.json
-          echo "=== Preparing www ==="
           mkdir -p www
-          cp -r static/* www/ 2>/dev/null || echo "No static files"
-          ls -la www/ || true
-          echo "=== Adding Android platform ==="
+          cp -r static/* www/ || true
           npx cap add android
-          echo "=== Android folder created ==="
-          ls -la android/ || true
 
-      - name: Accept Android licenses
-        run: yes | sdkmanager --licenses || true
-
-      - name: Build Debug APK
+      - name: Build APK
         working-directory: android
         run: |
-          set -e
           chmod +x ./gradlew
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
