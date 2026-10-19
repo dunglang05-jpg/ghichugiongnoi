@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Notes AI – Ghi chú giọng nói & hình ảnh</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>🎤 Voice Notes AI</h1>
+      <p class="subtitle">Ghi chú bằng giọng nói + nhận diện hình ảnh với Grok</p>
+      <button id="settingsBtn" class="icon-btn" title="Cài đặt">⚙️</button>
+    </header>
+
+    <div id="settingsPanel" class="settings-panel hidden">
+      <h3>Cài đặt API</h3>
+      <label>xAI API Key (từ console.x.ai)</label>
+      <input type="password" id="apiKey" placeholder="sk-...">
+      <small>Key chỉ được lưu trên trình duyệt của bạn</small>
+      <button id="saveSettings" class="btn primary">Lưu</button>
+      <div class="mode-info">
+        <span id="modeStatus">Chế độ: Miễn phí (Web Speech + Tesseract)</span>
+      </div>
+    </div>
+
+    <main>
+      <section class="composer">
+        <textarea id="noteInput" placeholder="Nhập ghi chú, hoặc dùng giọng nói / ảnh..." rows="3"></textarea>
+        
+        <div class="composer-actions">
+          <button id="recordBtn" class="btn record" title="Ghi âm">
+            <span class="mic-icon">🎙️</span>
+            <span class="label">Ghi âm</span>
+          </button>
+          <label class="btn image-btn" title="Tải ảnh lên">
+            🖼️ Ảnh
+            <input type="file" id="imageInput" accept="image/*" hidden>
+          </label>
+          <button id="saveBtn" class="btn primary">Lưu ghi chú</button>
+        </div>
+
+        <div id="recordingIndicator" class="recording-indicator hidden">
+          <span class="pulse"></span> Đang ghi âm... Nhấn lại để dừng
+        </div>
+
+        <div id="processing" class="processing hidden">Đang xử lý bằng AI...</div>
+      </section>
+
+      <section class="notes-section">
+        <div class="notes-header">
+          <h2>Ghi chú của bạn</h2>
+          <input type="text" id="searchInput" placeholder="Tìm kiếm ghi chú...">
+        </div>
+        <div id="notesList" class="notes-list"></div>
+        <p id="emptyState" class="empty-state">Chưa có ghi chú nào. Hãy bắt đầu ghi âm hoặc tải ảnh lên!</p>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
